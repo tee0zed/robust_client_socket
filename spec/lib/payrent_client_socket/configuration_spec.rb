@@ -1,0 +1,65 @@
+require 'spec_helper'
+require './lib/payrent_client_socket/configuration.rb'
+
+RSpec.describe PayrentClientSocket::Configuration do
+  let(:dummy_class) { Class.new { extend PayrentClientSocket::Configuration } }
+
+  before { allow(dummy_class).to receive(:correct_configuration?).and_return(true) }
+
+  describe '#configure' do
+    it 'yields the configuration object to the block' do
+      dummy_class.configure do |config|
+        expect(config).to be_a(PayrentClientSocket::ConfigStore)
+      end
+    end
+
+    it 'sets the configured flag to true' do
+      dummy_class.configure { |config| }
+      expect(dummy_class.configured?).to eq(true)
+    end
+  end
+
+  describe '#configured?' do
+    it 'returns false if not configured' do
+      expect(dummy_class.configured?).to eq(false)
+    end
+
+    it 'returns true if configured' do
+      dummy_class.configure { |config| }
+      expect(dummy_class.configured?).to eq(true)
+    end
+  end
+
+  describe '#correct_configuration?' do
+    before { allow(dummy_class).to receive(:correct_configuration?).and_call_original }
+
+    it 'returns false if keychain is empty' do
+      dummy_class.configure { |config| }
+      expect(dummy_class.correct_configuration?).to eq(false)
+    end
+
+    it 'returns false if keychain is missing base_uri' do
+      dummy_class.configure { |config| config.keychain = { service: { public_key: 'public_key' }} }
+      expect(dummy_class.correct_configuration?).to eq(false)
+    end
+
+    it 'returns false if keychain is missing public_key' do
+      dummy_class.configure { |config| config.keychain = { service: { base_uri: 'base_uri' }} }
+      expect(dummy_class.correct_configuration?).to eq(false)
+    end
+
+    it 'returns true if keychain is correct' do
+      dummy_class.configure { |config| config.keychain = { service: { base_uri: 'base_uri', public_key: 'public_key' }} }
+      expect(dummy_class.correct_configuration?).to eq(true)
+    end
+  end
+end
+
+RSpec.describe PayrentClientSocket::ConfigStore do
+  subject(:config_store) { described_class.new }
+
+  it 'has attribute keychain' do
+    config_store.keychain = { service: { uri: 'uri' } }
+    expect(config_store.keychain).to eq({ service: { uri: 'uri' } })
+  end
+end
