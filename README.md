@@ -15,9 +15,9 @@ PayrentClientSocket.configure do |c|
     },
     # [...]
   }
-
-  PayrentClientSocket.load!
 end
+
+PayrentClientSocket.load!
 ```
 
 and then
