@@ -10,10 +10,11 @@ module PayrentClientSocket
     end
 
     def correct_configuration?
-      return false unless configuration.keychain.is_a?(Hash)
+      return false unless configuration.services.is_a?(Hash)
+      return false if configuration.services.empty?
 
-      configuration.keychain.all? do |service_name, keychain|
-        keychain.key?(:base_uri) && keychain.key?(:public_key)
+      configuration.services.all? do |_, creds|
+        creds.key?(:base_uri) && creds.key?(:public_key)
       end
     end
 
@@ -23,6 +24,18 @@ module PayrentClientSocket
   end
 
   class ConfigStore
-    attr_accessor :keychain
+    attr_reader :services
+    def initialize
+      @services = {}
+    end
+
+    def method_missing(name, *args)
+      if name.end_with?('=')
+        @services[name.to_s.delete_suffix('=').to_sym] = args.first.is_a?(Hash) && args.pop
+      else
+        super
+      end
+    end
   end
 end
+

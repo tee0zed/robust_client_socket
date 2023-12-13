@@ -17,7 +17,7 @@ RSpec.describe PayrentClientSocket::HTTP::HTTPartyOverrides do
       include PayrentClientSocket::HTTP::Helpers
       include PayrentClientSocket::HTTP::HTTPartyOverrides
 
-      def self.keychain
+      def self.credentials
         {
           public_key: 'public_key',
           base_uri: 'https://example.com'

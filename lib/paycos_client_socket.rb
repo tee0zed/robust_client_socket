@@ -19,9 +19,9 @@ module PayrentClientSocket
     require_relative 'payrent_client_socket/http/helpers'
     require_relative 'payrent_client_socket/http/client'
 
-    configuration.keychain.each do |key, value|
+    configuration.services.each do |key, value|
       client = Class.new(PayrentClientSocket::HTTP::Client)
-      client.init(keychain: value, service_name: key)
+      client.init(credentials: value, service_name: key)
       const_set(key.to_s.split('_').map(&:capitalize).join, client)
     end
   end

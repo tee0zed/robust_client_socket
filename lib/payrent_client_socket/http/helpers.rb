@@ -20,7 +20,7 @@ module PayrentClientSocket
       end
 
       def public_key
-        keychain[:public_key]
+        credentials[:public_key]
       end
 
       def app_token

@@ -5,13 +5,13 @@ module PayrentClientSocket
       include HTTParty
       include HTTPartyOverrides
 
-      singleton_class.attr_accessor :keychain, :service_name
+      singleton_class.attr_accessor :credentials, :service_name
 
-      def self.init(keychain:, service_name:)
-        self.keychain = keychain
+      def self.init(credentials:, service_name:)
+        self.credentials = credentials
         self.service_name = service_name
 
-        base_uri keychain[:base_uri]
+        base_uri credentials[:base_uri]
         headers payrent_headers
       end
     end

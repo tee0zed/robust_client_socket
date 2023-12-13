@@ -5,15 +5,13 @@ RSpec.describe PayrentClientSocket do
   describe '.load' do
     before do
       PayrentClientSocket.configure do |config|
-        config.keychain = {
-          service_one: {
-            base_uri: 'https://example1.com',
-            public_key: 'public_key'
-          },
-          service_two: {
-            base_uri: 'https://example2.com',
-            public_key: 'public_key'
-          }
+        config.service_one = {
+          base_uri: 'https://example1.com',
+          public_key: 'public_key'
+        }
+        config.service_two = {
+          base_uri: 'https://example2.com',
+          public_key: 'public_key'
         }
       end
     end

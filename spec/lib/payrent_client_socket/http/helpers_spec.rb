@@ -8,7 +8,7 @@ RSpec.describe PayrentClientSocket::HTTP::Helpers do
     Class.new do
       include PayrentClientSocket::HTTP::Helpers
 
-      singleton_class.attr_accessor :keychain, :service_name
+      singleton_class.attr_accessor :credentials, :service_name
 
       def self.service_uri
       end
