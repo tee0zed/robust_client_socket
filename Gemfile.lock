@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    payrent_client_socket (0.2.3)
+    payrent_client_socket (0.3.4)
       httparty
       oj
       rake

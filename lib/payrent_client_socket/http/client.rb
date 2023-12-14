@@ -5,7 +5,7 @@ module PayrentClientSocket
       include HTTParty
       include HTTPartyOverrides
 
-      singleton_class.attr_accessor :credentials
+      singleton_class.attr_accessor :credentials, :client_name
 
       def self.init(credentials:, client_name:)
         self.credentials = credentials
