@@ -49,7 +49,7 @@ RSpec.describe PayrentClientSocket::Configuration do
     end
 
     it 'returns true if creds is correct' do
-      dummy_class.configure { |config| config.service = { base_uri: 'base_uri', public_key: 'public_key' } }
+      dummy_class.configure { |config| config.client_name = 'sample'; config.service = { base_uri: 'base_uri', public_key: 'public_key' } }
       expect(dummy_class.correct_configuration?).to eq(true)
     end
   end

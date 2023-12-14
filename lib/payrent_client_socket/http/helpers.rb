@@ -24,7 +24,7 @@ module PayrentClientSocket
       end
 
       def app_token
-        "#{service_name}_#{time_now_in_utc}"
+        "#{client_name}_#{time_now_in_utc}"
       end
 
       def time_now_in_utc

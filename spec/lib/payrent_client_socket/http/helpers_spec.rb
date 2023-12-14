@@ -8,7 +8,7 @@ RSpec.describe PayrentClientSocket::HTTP::Helpers do
     Class.new do
       include PayrentClientSocket::HTTP::Helpers
 
-      singleton_class.attr_accessor :credentials, :service_name
+      singleton_class.attr_accessor :credentials, :client_name
 
       def self.service_uri
       end
@@ -43,9 +43,9 @@ RSpec.describe PayrentClientSocket::HTTP::Helpers do
 
     describe '.app_token' do
       it 'fetches the app token from configuration' do
-        allow(dummy_class).to receive(:service_name).and_return('service_name')
+        allow(dummy_class).to receive(:client_name).and_return('client_name')
 
-        expect(dummy_class.send(:app_token)).to match(/service_name_+\d/)
+        expect(dummy_class.send(:app_token)).to match(/client_name_+\d/)
       end
     end
   end
