@@ -8,7 +8,8 @@ Gem to interact with Payrent API within infra
 
 ```ruby
 PayrentClientSocket.configure do |c|
-  c.core = { # service name, used to identify the service must be same as service name in allowed_services in PayrentServerSocket 
+  c.client_name = 'core' # client name, used to identify the service must be same as service name in allowed_services in PayrentServerSocket 
+  c.core = { # server name, name that will be resolved to PayrentClientSocket::[NAME]
     base_uri: 'https://core.payrent.com',
     public_key: '-----BEGIN PUBLIC KEY-----[...]' # public key of the service, from pair of keys by PayrentServerSocket
   }
