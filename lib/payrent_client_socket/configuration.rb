@@ -26,7 +26,7 @@ module PayrentClientSocket
 
   class ConfigStore
     attr_reader :services
-    attr_accessor :client_name
+    attr_accessor :client_name, :header_name
     def initialize
       @services = {}
       @client_name = nil

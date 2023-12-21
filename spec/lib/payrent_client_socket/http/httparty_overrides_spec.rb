@@ -28,6 +28,9 @@ RSpec.describe PayrentClientSocket::HTTP::HTTPartyOverrides do
         'service_name'
       end
 
+      def self.header_name
+      end
+
       base_uri 'https://example.com'
       headers payrent_headers
     end
