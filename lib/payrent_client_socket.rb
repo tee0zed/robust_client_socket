@@ -21,7 +21,7 @@ module PayrentClientSocket
 
     configuration.services.each do |key, value|
       client = Class.new(PayrentClientSocket::HTTP::Client)
-      client.init(credentials: value, client_name: configuration.client_name)
+      client.init(credentials: value, client_name: configuration.client_name, header_name: configuration.header_name)
       const_set(key.to_s.split('_').map(&:capitalize).join, client)
     end
   end
