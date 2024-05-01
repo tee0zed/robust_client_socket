@@ -4,6 +4,18 @@ module PayrentClientSocket
       def self.included(base)
         base.extend(PrivateClassMethods)
         base.private_class_method *PrivateClassMethods.instance_methods(false)
+
+        base.extend(PublicClassMethods)
+      end
+    end
+
+    module PublicClassMethods
+      def encrypt_message(message)
+        encrypted_data(message_with_timestamp(message))
+      end
+
+      def message_with_timestamp(message)
+        "#{message}_#{time_now_in_utc}"
       end
     end
 
@@ -16,7 +28,11 @@ module PayrentClientSocket
       end
 
       def secure_token
-        ::Base64.strict_encode64(::OpenSSL::PKey::RSA.new(public_key).public_encrypt(app_token))
+        encrypted_data(app_token)
+      end
+
+      def encrypted_data(data)
+        ::Base64.strict_encode64(::OpenSSL::PKey::RSA.new(public_key).public_encrypt(data))
       end
 
       def public_key
