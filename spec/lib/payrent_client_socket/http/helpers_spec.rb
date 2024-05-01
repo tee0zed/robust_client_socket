@@ -18,6 +18,19 @@ RSpec.describe PayrentClientSocket::HTTP::Helpers do
     end
   end
 
+  describe 'PublicClassMethods' do
+    describe '.encrypt_message' do
+      it 'returns the encrypted message' do
+        allow(::OpenSSL::PKey::RSA).to receive_message_chain(:new, :public_encrypt).and_return('encrypted_message')
+        allow(::Base64).to receive(:strict_encode64).with('encrypted_message').and_return('base64_encrypted_message')
+        allow(dummy_class).to receive(:public_key).and_return('public_key')
+        allow(dummy_class).to receive(:message_with_timestamp).and_return('message_with_timestamp')
+
+        expect(dummy_class.encrypt_message('message')).to eq('base64_encrypted_message')
+      end
+    end
+  end
+
   describe 'PrivateClassMethods' do
     describe '.payrent_headers' do
       it 'returns the correct headers' do

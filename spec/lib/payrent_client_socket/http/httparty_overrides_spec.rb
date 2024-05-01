@@ -44,11 +44,11 @@ RSpec.describe PayrentClientSocket::HTTP::HTTPartyOverrides do
     it 'calls the original post method with updated headers every time' do
       allow(dummy_class).to receive(:secure_token).and_return('secure_token')
       dummy_class.post('/')
-      expect(dummy_class.send(:headers)).to include('secure-token' => 'secure_token')
+      expect(dummy_class.send(:headers)).to include(described_class::DEFAULT_HEADER_NAME => 'secure_token')
 
       allow(dummy_class).to receive(:secure_token).and_return('other_secure_token')
       dummy_class.post('/')
-      expect(dummy_class.send(:headers)).to include('secure-token' => 'other_secure_token')
+      expect(dummy_class.send(:headers)).to include(described_class::DEFAULT_HEADER_NAME => 'other_secure_token')
     end
   end
 end
