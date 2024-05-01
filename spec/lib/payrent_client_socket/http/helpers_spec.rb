@@ -20,7 +20,6 @@ RSpec.describe PayrentClientSocket::HTTP::Helpers do
 
   describe 'PublicClassMethods' do
     describe '.encrypt_message' do
-
       it 'returns the encrypted message' do
         allow(::OpenSSL::PKey::RSA).to receive_message_chain(:new, :public_encrypt).and_return('encrypted_message')
         allow(::Base64).to receive(:strict_encode64).with('encrypted_message').and_return('base64_encrypted_message')
