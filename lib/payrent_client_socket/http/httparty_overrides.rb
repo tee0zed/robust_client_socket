@@ -6,13 +6,13 @@ module PayrentClientSocket
 
       def self.included(base)
         base.singleton_class.prepend(ClassMethods)
-        base.private_class_method *ClassMethods.instance_methods(false)
+        base.private_class_method(*ClassMethods.instance_methods(false))
       end
 
       module ClassMethods
-        def perform_request(http_method, path, options, &block)
+        def perform_request(http_method, path, options, &)
           headers[header_name || DEFAULT_HEADER_NAME] = secure_token
-          super(http_method, path, options, &block)
+          super
         end
       end
     end

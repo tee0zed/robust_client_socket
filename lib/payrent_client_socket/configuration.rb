@@ -27,12 +27,13 @@ module PayrentClientSocket
   class ConfigStore
     attr_reader :services
     attr_accessor :client_name, :header_name
+
     def initialize
       @services = {}
       @client_name = nil
     end
 
-    def method_missing(name, *args)
+    def method_missing(name, *args) # rubocop:disable Style/MissingRespondToMissing
       if name.end_with?('=')
         @services[name.to_s.delete_suffix('=').to_sym] = args.first.is_a?(Hash) && args.pop
       else
@@ -41,4 +42,3 @@ module PayrentClientSocket
     end
   end
 end
-

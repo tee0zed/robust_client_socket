@@ -5,10 +5,11 @@ require_relative 'payrent_client_socket/configuration'
 
 module PayrentClientSocket
   extend PayrentClientSocket::Configuration
-  extend self
 
-  def load!
-    raise "You must configure PayrentClientSocket first!" unless configured?
+  module_function
+
+  def load! # rubocop:disable Metrics/AbcSize
+    raise 'You must configure PayrentClientSocket first!' unless configured?
 
     require 'openssl'
     require 'httparty'

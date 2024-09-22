@@ -3,7 +3,7 @@ module PayrentClientSocket
     module Helpers
       def self.included(base)
         base.extend(PrivateClassMethods)
-        base.private_class_method *PrivateClassMethods.instance_methods(false)
+        base.private_class_method(*PrivateClassMethods.instance_methods(false))
 
         base.extend(PublicClassMethods)
       end
