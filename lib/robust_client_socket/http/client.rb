@@ -1,4 +1,4 @@
-module PayrentClientSocket
+module RobustClientSocket
   module HTTP
     class Client
       include Helpers
@@ -13,7 +13,7 @@ module PayrentClientSocket
         self.header_name = header_name
 
         base_uri credentials[:base_uri]
-        headers payrent_headers
+        headers robust_headers
       end
     end
   end

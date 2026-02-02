@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'openssl'
 require 'base64'
-require './lib/payrent_client_socket/http/helpers.rb'
+require './lib/robust_client_socket/http/helpers.rb'
 
-RSpec.describe PayrentClientSocket::HTTP::Helpers do
+RSpec.describe RobustClientSocket::HTTP::Helpers do
   let(:dummy_class) do
     Class.new do
-      include PayrentClientSocket::HTTP::Helpers
+      include RobustClientSocket::HTTP::Helpers
 
       singleton_class.attr_accessor :credentials, :client_name
 
@@ -32,14 +32,14 @@ RSpec.describe PayrentClientSocket::HTTP::Helpers do
   end
 
   describe 'PrivateClassMethods' do
-    describe '.payrent_headers' do
+    describe '.robust_headers' do
       it 'returns the correct headers' do
         expected_headers = {
           'Content-Type' => 'application/json',
           'Accept' => 'application/json'
         }
 
-        expect(dummy_class.send(:payrent_headers)).to eq(expected_headers)
+        expect(dummy_class.send(:robust_headers)).to eq(expected_headers)
       end
     end
 

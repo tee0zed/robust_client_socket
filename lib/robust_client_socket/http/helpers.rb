@@ -1,4 +1,4 @@
-module PayrentClientSocket
+module RobustClientSocket
   module HTTP
     module Helpers
       def self.included(base)
@@ -20,7 +20,7 @@ module PayrentClientSocket
     end
 
     module PrivateClassMethods
-      def payrent_headers
+      def robust_headers
         {
           'Content-Type' => 'application/json',
           'Accept' => 'application/json'

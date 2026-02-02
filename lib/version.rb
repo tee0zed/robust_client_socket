@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-module PayrentClientSocket
-  VERSION = '0.4.6'
+module RobustClientSocket
+  VERSION = '0.4.8'
 end

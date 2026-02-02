@@ -3,12 +3,12 @@
 require "./lib/version.rb"
 
 Gem::Specification.new do |spec|
-  spec.name = "payrent_client_socket"
-  spec.version = PayrentClientSocket::VERSION
+  spec.name = "robust_client_socket"
+  spec.version = RobustClientSocket::VERSION
   spec.authors = ["Taras Zhuk"]
   spec.email = ["tee0zed@gmail.com"]
-  spec.summary = "Payrent Client Socket"
-  spec.description = "Methods that should be used to interact with Payrent inner ecosystem."
+  spec.summary = "Robust Client Socket"
+  spec.description = "Methods that should be used to interact with Robust inner ecosystem."
   spec.required_ruby_version = ">= 2.7.7"
 
   # Specify which files should be added to the gem when it is released.

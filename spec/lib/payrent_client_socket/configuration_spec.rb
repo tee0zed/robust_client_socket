@@ -1,15 +1,15 @@
 require 'spec_helper'
-require './lib/payrent_client_socket/configuration.rb'
+require './lib/robust_client_socket/configuration.rb'
 
-RSpec.describe PayrentClientSocket::Configuration do
-  let(:dummy_class) { Class.new { extend PayrentClientSocket::Configuration } }
+RSpec.describe RobustClientSocket::Configuration do
+  let(:dummy_class) { Class.new { extend RobustClientSocket::Configuration } }
 
   before { allow(dummy_class).to receive(:correct_configuration?).and_return(true) }
 
   describe '#configure' do
     it 'yields the configuration object to the block' do
       dummy_class.configure do |config|
-        expect(config).to be_a(PayrentClientSocket::ConfigStore)
+        expect(config).to be_a(RobustClientSocket::ConfigStore)
       end
     end
 
@@ -55,7 +55,7 @@ RSpec.describe PayrentClientSocket::Configuration do
   end
 end
 
-RSpec.describe PayrentClientSocket::ConfigStore do
+RSpec.describe RobustClientSocket::ConfigStore do
   subject(:config_store) { described_class.new }
 
   it 'has attribute keychain' do

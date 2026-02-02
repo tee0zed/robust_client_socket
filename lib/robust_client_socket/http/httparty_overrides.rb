@@ -1,4 +1,4 @@
-module PayrentClientSocket
+module RobustClientSocket
   module HTTP
     # This allows us to set dynamic headers every time we make a request
     module HTTPartyOverrides

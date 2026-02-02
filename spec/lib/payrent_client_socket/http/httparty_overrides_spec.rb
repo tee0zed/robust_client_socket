@@ -2,20 +2,20 @@ require 'spec_helper'
 require 'openssl'
 require 'base64'
 require 'httparty'
-require './lib/payrent_client_socket/configuration.rb'
-require './lib/payrent_client_socket/http/helpers.rb'
-require './lib/payrent_client_socket/http/httparty_overrides.rb'
+require './lib/robust_client_socket/configuration.rb'
+require './lib/robust_client_socket/http/helpers.rb'
+require './lib/robust_client_socket/http/httparty_overrides.rb'
 
-module PayrentClientSocket
-  extend PayrentClientSocket::Configuration
+module RobustClientSocket
+  extend RobustClientSocket::Configuration
 end
 
-RSpec.describe PayrentClientSocket::HTTP::HTTPartyOverrides do
+RSpec.describe RobustClientSocket::HTTP::HTTPartyOverrides do
   let(:dummy_class) do
     Class.new do
       include HTTParty
-      include PayrentClientSocket::HTTP::Helpers
-      include PayrentClientSocket::HTTP::HTTPartyOverrides
+      include RobustClientSocket::HTTP::Helpers
+      include RobustClientSocket::HTTP::HTTPartyOverrides
 
       def self.credentials
         {
@@ -32,7 +32,7 @@ RSpec.describe PayrentClientSocket::HTTP::HTTPartyOverrides do
       end
 
       base_uri 'https://example.com'
-      headers payrent_headers
+      headers robust_headers
     end
   end
 

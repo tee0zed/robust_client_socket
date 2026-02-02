@@ -1,10 +1,10 @@
 require 'spec_helper'
-require './lib/payrent_client_socket.rb'
+require './lib/robust_client_socket.rb'
 
-RSpec.describe PayrentClientSocket do
+RSpec.describe RobustClientSocket do
   describe '.load' do
     before do
-      PayrentClientSocket.configure do |config|
+      RobustClientSocket.configure do |config|
         config.service_one = {
           base_uri: 'https://example1.com',
           public_key: 'public_key'
@@ -17,15 +17,15 @@ RSpec.describe PayrentClientSocket do
     end
 
     it 'loads services as separate classes' do
-      PayrentClientSocket.load!
-      expect(PayrentClientSocket::ServiceOne).to be_a(Class)
-      expect(PayrentClientSocket::ServiceTwo).to be_a(Class)
+      RobustClientSocket.load!
+      expect(RobustClientSocket::ServiceOne).to be_a(Class)
+      expect(RobustClientSocket::ServiceTwo).to be_a(Class)
     end
 
     it 'loads services with correct base_uri' do
-      PayrentClientSocket.load!
-      expect(PayrentClientSocket::ServiceOne.base_uri).to eq('https://example1.com')
-      expect(PayrentClientSocket::ServiceTwo.base_uri).to eq('https://example2.com')
+      RobustClientSocket.load!
+      expect(RobustClientSocket::ServiceOne.base_uri).to eq('https://example1.com')
+      expect(RobustClientSocket::ServiceTwo.base_uri).to eq('https://example2.com')
     end
   end
 end
