@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'openssl'
 require 'base64'
+require './lib/version.rb'
 require './lib/robust_client_socket/http/helpers.rb'
 
 RSpec.describe RobustClientSocket::HTTP::Helpers do
@@ -21,12 +22,13 @@ RSpec.describe RobustClientSocket::HTTP::Helpers do
   describe 'PublicClassMethods' do
     describe '.encrypt_message' do
       it 'returns the encrypted message' do
-        allow(::OpenSSL::PKey::RSA).to receive_message_chain(:new, :public_encrypt).and_return('encrypted_message')
-        allow(::Base64).to receive(:strict_encode64).with('encrypted_message').and_return('base64_encrypted_message')
-        allow(dummy_class).to receive(:public_key).and_return('public_key')
+        rsa_key = OpenSSL::PKey::RSA.new(2048)
+        allow(dummy_class).to receive(:public_key).and_return(rsa_key.public_key.to_s)
         allow(dummy_class).to receive(:message_with_timestamp).and_return('message_with_timestamp')
 
-        expect(dummy_class.encrypt_message('message')).to eq('base64_encrypted_message')
+        result = dummy_class.encrypt_message('message')
+        expect(result).to be_a(String)
+        expect { Base64.strict_decode64(result) }.not_to raise_error
       end
     end
   end
@@ -36,7 +38,8 @@ RSpec.describe RobustClientSocket::HTTP::Helpers do
       it 'returns the correct headers' do
         expected_headers = {
           'Content-Type' => 'application/json',
-          'Accept' => 'application/json'
+          'Accept' => 'application/json',
+          'User-Agent' => "RobustClientSocket/#{RobustClientSocket::VERSION}"
         }
 
         expect(dummy_class.send(:robust_headers)).to eq(expected_headers)
@@ -45,12 +48,13 @@ RSpec.describe RobustClientSocket::HTTP::Helpers do
 
     describe '.secure_token' do
       it 'returns the encrypted token' do
-        allow(::OpenSSL::PKey::RSA).to receive_message_chain(:new, :public_encrypt).and_return('encrypted_token')
-        allow(::Base64).to receive(:strict_encode64).with('encrypted_token').and_return('base64_encrypted_token')
-        allow(dummy_class).to receive(:public_key).and_return('public_key')
+        rsa_key = OpenSSL::PKey::RSA.new(2048)
+        allow(dummy_class).to receive(:public_key).and_return(rsa_key.public_key.to_s)
         allow(dummy_class).to receive(:app_token).and_return('app_token')
 
-        expect(dummy_class.send(:secure_token)).to eq('base64_encrypted_token')
+        result = dummy_class.send(:secure_token)
+        expect(result).to be_a(String)
+        expect { Base64.strict_decode64(result) }.not_to raise_error
       end
     end
 

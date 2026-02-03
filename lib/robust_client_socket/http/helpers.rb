@@ -20,10 +20,13 @@ module RobustClientSocket
     end
 
     module PrivateClassMethods
+      MIN_KEY_SIZE = 2048
+
       def robust_headers
         {
           'Content-Type' => 'application/json',
-          'Accept' => 'application/json'
+          'Accept' => 'application/json',
+          'User-Agent' => "RobustClientSocket/#{RobustClientSocket::VERSION}"
         }
       end
 
@@ -32,7 +35,33 @@ module RobustClientSocket
       end
 
       def encrypted_data(data)
-        ::Base64.strict_encode64(::OpenSSL::PKey::RSA.new(public_key).public_encrypt(data))
+        validate_key_security!
+        
+        encrypted = rsa_key.public_encrypt(
+          data,
+          OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
+        )
+        
+        ::Base64.strict_encode64(encrypted)
+      rescue OpenSSL::PKey::RSAError => e
+        raise SecurityError, "Encryption failed: #{e.message}"
+      end
+
+      def rsa_key
+        @rsa_key ||= begin
+          key = OpenSSL::PKey::RSA.new(public_key)
+          raise SecurityError, "Invalid public key" unless key.public?
+          key
+        end
+      end
+
+      def validate_key_security!
+        key_bits = rsa_key.n.num_bits
+        
+        if key_bits < MIN_KEY_SIZE
+          raise SecurityError,
+            "RSA key size (#{key_bits} bits) below minimum (#{MIN_KEY_SIZE} bits)"
+        end
       end
 
       def public_key

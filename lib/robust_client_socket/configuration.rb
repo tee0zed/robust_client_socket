@@ -1,10 +1,13 @@
 module RobustClientSocket
   module Configuration
+    MIN_KEY_SIZE = 2048
+
     attr_reader :configuration, :configured
 
     def configure
       @configuration ||= ConfigStore.new
       yield(configuration)
+      validate_keys_security!
 
       @configured = true
     end
@@ -21,6 +24,26 @@ module RobustClientSocket
 
     def configured?
       !!@configured && correct_configuration?
+    end
+
+    private
+
+    def validate_keys_security!
+      configuration.services.each do |service_name, creds|
+        next unless creds[:public_key]
+
+        key = OpenSSL::PKey::RSA.new(creds[:public_key])
+        key_bits = key.n.num_bits
+
+        if key_bits < MIN_KEY_SIZE
+          raise SecurityError,
+            "RSA key size for #{service_name} (#{key_bits} bits) below minimum (#{MIN_KEY_SIZE} bits)"
+        end
+
+        raise SecurityError, "Invalid public key for #{service_name}" unless key.public?
+      rescue OpenSSL::PKey::RSAError => e
+        raise SecurityError, "Invalid public key for #{service_name}: #{e.message}"
+      end
     end
   end
 

@@ -7,30 +7,57 @@ RSpec.describe RobustClientSocket::Configuration do
   before { allow(dummy_class).to receive(:correct_configuration?).and_return(true) }
 
   describe '#configure' do
+    let(:public_key) { OpenSSL::PKey::RSA.generate(2048).public_key.to_pem }
+
     it 'yields the configuration object to the block' do
       dummy_class.configure do |config|
+        config.client_name = 'test'
+        config.service = { base_uri: 'https://example.com', public_key: public_key }
         expect(config).to be_a(RobustClientSocket::ConfigStore)
       end
     end
 
     it 'sets the configured flag to true' do
-      dummy_class.configure { |config| }
+      dummy_class.configure do |config|
+        config.client_name = 'test'
+        config.service = { base_uri: 'https://example.com', public_key: public_key }
+      end
       expect(dummy_class.configured?).to eq(true)
+    end
+
+    context 'with invalid key size' do
+      let(:small_key) { OpenSSL::PKey::RSA.generate(1024).public_key.to_pem }
+
+      it 'raises SecurityError' do
+        expect {
+          dummy_class.configure do |config|
+            config.client_name = 'test'
+            config.service = { base_uri: 'https://example.com', public_key: small_key }
+          end
+        }.to raise_error(SecurityError, /below minimum/)
+      end
     end
   end
 
   describe '#configured?' do
+    let(:public_key) { OpenSSL::PKey::RSA.generate(2048).public_key.to_pem }
+
     it 'returns false if not configured' do
       expect(dummy_class.configured?).to eq(false)
     end
 
     it 'returns true if configured' do
-      dummy_class.configure { |config| }
+      dummy_class.configure do |config|
+        config.client_name = 'test'
+        config.service = { base_uri: 'https://example.com', public_key: public_key }
+      end
       expect(dummy_class.configured?).to eq(true)
     end
   end
 
   describe '#correct_configuration?' do
+    let(:public_key) { OpenSSL::PKey::RSA.generate(2048).public_key.to_pem }
+
     before { allow(dummy_class).to receive(:correct_configuration?).and_call_original }
 
     it 'returns false if services is empty' do
@@ -39,7 +66,7 @@ RSpec.describe RobustClientSocket::Configuration do
     end
 
     it 'returns false if creds is missing base_uri' do
-      dummy_class.configure { |config| config.service = { public_key: 'public_key' } }
+      dummy_class.configure { |config| config.service = { public_key: public_key } }
       expect(dummy_class.correct_configuration?).to eq(false)
     end
 
@@ -49,7 +76,10 @@ RSpec.describe RobustClientSocket::Configuration do
     end
 
     it 'returns true if creds is correct' do
-      dummy_class.configure { |config| config.client_name = 'sample'; config.service = { base_uri: 'base_uri', public_key: 'public_key' } }
+      dummy_class.configure do |config|
+        config.client_name = 'sample'
+        config.service = { base_uri: 'base_uri', public_key: public_key }
+      end
       expect(dummy_class.correct_configuration?).to eq(true)
     end
   end

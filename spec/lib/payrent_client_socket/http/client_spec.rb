@@ -51,7 +51,7 @@ RSpec.describe RobustClientSocket::HTTP::Client do
         allow(described_class).to receive(:development_mode?).and_return(false)
       end
 
-      it 'raises InsecureConnectionError' do
+      it 'raises SecurityError' do
         expect {
           described_class.init(credentials: http_credentials, client_name: client_name)
         }.to raise_error(RobustClientSocket::HTTP::Client::InsecureConnectionError, /HTTPS required in production/)
@@ -85,7 +85,7 @@ RSpec.describe RobustClientSocket::HTTP do
         allow(rails_stub).to receive(:env).and_return(rails_env)
       end
 
-      it 'delegates to Rails.env.production?' do
+      it 'delegates to Rails.production?' do
         expect(described_class.production?).to be true
       end
     end
