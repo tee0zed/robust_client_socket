@@ -62,4 +62,40 @@ RSpec.describe RobustClientSocket::ConfigStore do
     config_store.service = { uri: 'uri' }
     expect(config_store.services).to eq({ service: { uri: 'uri' } })
   end
+
+  describe '#initialize' do
+    it 'initializes services as empty hash' do
+      expect(config_store.services).to eq({})
+    end
+
+    it 'initializes client_name as nil' do
+      expect(config_store.client_name).to be_nil
+    end
+  end
+
+  describe '#method_missing' do
+    context 'with setter method' do
+      it 'adds service to services hash' do
+        config_store.api_service = { base_uri: 'https://api.example.com', public_key: 'key' }
+        expect(config_store.services[:api_service]).to eq({ base_uri: 'https://api.example.com', public_key: 'key' })
+      end
+
+      it 'rejects non-hash values' do
+        config_store.api_service = 'string_value'
+        expect(config_store.services[:api_service]).to be false
+      end
+    end
+  end
+
+  describe 'accessors' do
+    it 'allows setting client_name' do
+      config_store.client_name = 'test_client'
+      expect(config_store.client_name).to eq('test_client')
+    end
+
+    it 'allows setting header_name' do
+      config_store.header_name = 'Custom-Header'
+      expect(config_store.header_name).to eq('Custom-Header')
+    end
+  end
 end

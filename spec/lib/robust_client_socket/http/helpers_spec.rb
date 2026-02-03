@@ -61,5 +61,30 @@ RSpec.describe RobustClientSocket::HTTP::Helpers do
         expect(dummy_class.send(:app_token)).to match(/client_name_+\d/)
       end
     end
+
+    describe '.public_key' do
+      it 'extracts public_key from credentials' do
+        dummy_class.credentials = { public_key: 'test_key' }
+        expect(dummy_class.send(:credentials)[:public_key]).to eq('test_key')
+      end
+    end
+
+    describe '.time_now_in_utc' do
+      it 'returns current UTC timestamp' do
+        allow(Time).to receive_message_chain(:now, :utc, :to_i).and_return(1234567890)
+        expect(dummy_class.send(:time_now_in_utc)).to eq(1234567890)
+      end
+    end
+
+    describe '.encrypted_data' do
+      it 'encrypts and base64 encodes data' do
+        rsa_key = OpenSSL::PKey::RSA.new(2048)
+        allow(dummy_class).to receive(:public_key).and_return(rsa_key.public_key.to_s)
+
+        result = dummy_class.send(:encrypted_data, 'test_data')
+        expect(result).to be_a(String)
+        expect { Base64.strict_decode64(result) }.not_to raise_error
+      end
+    end
   end
 end

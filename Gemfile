@@ -11,6 +11,7 @@ gem "oj"
 gem "httparty"
 
 group :development, :test do
+  gem 'webmock'
   gem 'rspec'
   gem 'pry'
   gem 'rspec_junit_formatter'
