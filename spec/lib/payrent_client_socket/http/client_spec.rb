@@ -48,7 +48,7 @@ RSpec.describe RobustClientSocket::HTTP::Client do
       let(:http_credentials) { credentials.merge(base_uri: 'http://example.com') }
 
       before do
-        allow(described_class).to receive(:development_mode?).and_return(false)
+        allow(described_class).to receive(:production?).and_return(true)
       end
 
       it 'raises SecurityError' do
@@ -62,7 +62,7 @@ RSpec.describe RobustClientSocket::HTTP::Client do
       let(:http_credentials) { credentials.merge(base_uri: 'http://example.com') }
 
       before do
-        allow(described_class).to receive(:development_mode?).and_return(true)
+        allow(described_class).to receive(:production?).and_return(false)
       end
 
       it 'allows HTTP' do
@@ -74,19 +74,19 @@ RSpec.describe RobustClientSocket::HTTP::Client do
   end
 end
 
-RSpec.describe RobustClientSocket::HTTP do
+RSpec.describe RobustClientSocket::HTTP::Client do
   describe '.production?' do
     context 'when Rails is defined' do
       let(:rails_stub) { double('Rails') }
       let(:rails_env) { double('env', production?: true) }
-      
+
       before do
         stub_const('Rails', rails_stub)
         allow(rails_stub).to receive(:env).and_return(rails_env)
       end
 
       it 'delegates to Rails.production?' do
-        expect(described_class.production?).to be true
+        expect(described_class.send(:production?)).to be true
       end
     end
 
@@ -97,12 +97,12 @@ RSpec.describe RobustClientSocket::HTTP do
 
       it 'checks RACK_ENV for production' do
         allow(ENV).to receive(:fetch).with('RACK_ENV', 'development').and_return('production')
-        expect(described_class.production?).to be true
+        expect(described_class.send(:production?)).to be true
       end
 
       it 'defaults to development' do
         allow(ENV).to receive(:fetch).with('RACK_ENV', 'development').and_return('development')
-        expect(described_class.production?).to be false
+        expect(described_class.send(:production?)).to be false
       end
     end
   end

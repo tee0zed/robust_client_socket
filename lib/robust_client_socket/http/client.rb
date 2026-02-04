@@ -1,13 +1,5 @@
 module RobustClientSocket
   module HTTP
-    def self.production?
-      if defined?(Rails)
-        Rails.env.production?
-      else
-        ENV.fetch('RACK_ENV', 'development') == 'production'
-      end
-    end
-
     class Client
       include Helpers
       include HTTParty
@@ -45,7 +37,7 @@ module RobustClientSocket
 
         def enforce_https!(uri)
           return if uri.start_with?('https://')
-          return if development_mode?
+          return unless production?
 
           raise InsecureConnectionError,
             "HTTPS required in production. Use https:// instead of #{uri}"
@@ -73,11 +65,11 @@ module RobustClientSocket
         end
 
         def production?
-          HTTP.production?
-        end
-
-        def development_mode?
-          !production?
+          if defined? Rails
+            Rails.env.production?
+          else
+            ENV.fetch("RACK_ENV", "development") == 'production'
+          end
         end
       end
     end
