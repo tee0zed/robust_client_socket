@@ -13,7 +13,11 @@ module RobustClientSocket
       class << self
         def init(credentials:, client_name:, header_name: nil)
           validate_credentials!(credentials)
-          enforce_https!(credentials[:base_uri])
+
+          if credentials.fetch(:ssl_verify, false)
+            configure_ssl!(credentials)
+            enforce_https!(credentials)
+          end
 
           self.credentials = credentials
           self.client_name = client_name
@@ -21,7 +25,6 @@ module RobustClientSocket
 
           base_uri credentials[:base_uri]
           headers robust_headers
-          configure_ssl(credentials)
           configure_timeouts(credentials)
         end
 
@@ -36,26 +39,35 @@ module RobustClientSocket
           raise InvalidCredentialsError, "public_key cannot be empty" if credentials[:public_key].to_s.strip.empty?
         end
 
-        def enforce_https!(uri)
-          return if uri.start_with?('https://')
+        def enforce_https!(credentials)
+          return if credentials[:base_uri].start_with?('https://')
           return unless production?
 
           raise InsecureConnectionError,
-            "HTTPS required in production. Use https:// instead of #{uri}"
+            "HTTPS required in production. Use https:// instead of #{credentials[:base_uri]}"
         end
 
-        def configure_ssl(credentials)
+        def configure_ssl!(credentials)
           default_options.update(
-            verify: credentials.fetch(:ssl_verify, true),
+            verify: true,
             ssl_version: :TLSv1_2,
-            ciphers: [
-              'ECDHE-RSA-AES128-GCM-SHA256',
-              'ECDHE-RSA-AES256-GCM-SHA384',
-              'ECDHE-ECDSA-AES128-GCM-SHA256',
-              'ECDHE-ECDSA-AES256-GCM-SHA384'
-            ].join(':'),
+            ciphers: ssl_ciphers(credentials),
             verify_mode: OpenSSL::SSL::VERIFY_PEER
           )
+        end
+
+        def ssl_ciphers(credentials)
+          ciphers = credentials.fetch(:ciphers,
+            %w[ECDHE-RSA-AES128-GCM-SHA256
+               ECDHE-RSA-AES256-GCM-SHA384
+               ECDHE-ECDSA-AES128-GCM-SHA256
+               ECDHE-ECDSA-AES256-GCM-SHA384].join(':')
+          )
+
+          return ciphers if ciphers.is_a?(String)
+          return ArgumentError, "Ciphers must be Array or String" unless ciphers.is_a?(Array)
+
+          ciphers.join(':')
         end
 
         def configure_timeouts(credentials)

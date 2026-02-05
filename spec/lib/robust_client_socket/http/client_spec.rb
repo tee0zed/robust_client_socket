@@ -15,6 +15,14 @@ RSpec.describe RobustClientSocket::HTTP::Client do
   let(:client_name) { 'test_client' }
   let(:header_name) { 'Custom-Token' }
 
+  after(:each) do
+    # Reset HTTParty default_options to avoid test pollution
+    described_class.default_options.delete(:verify)
+    described_class.default_options.delete(:verify_mode)
+    described_class.default_options.delete(:ssl_version)
+    described_class.default_options.delete(:ciphers)
+  end
+
   describe '.init' do
     context 'with valid HTTPS credentials' do
       it 'sets credentials' do
@@ -37,15 +45,21 @@ RSpec.describe RobustClientSocket::HTTP::Client do
         expect(described_class.base_uri).to eq('https://example.com')
       end
 
-      it 'forces SSL verification' do
-        described_class.init(credentials: credentials, client_name: client_name)
+      it 'configures SSL verification when ssl_verify is enabled' do
+        ssl_credentials = credentials.merge(ssl_verify: true)
+        described_class.init(credentials: ssl_credentials, client_name: client_name)
         expect(described_class.default_options[:verify]).to be true
         expect(described_class.default_options[:verify_mode]).to eq(OpenSSL::SSL::VERIFY_PEER)
       end
+
+      it 'does not configure SSL verification when ssl_verify is not set' do
+        described_class.init(credentials: credentials, client_name: client_name)
+        expect(described_class.default_options[:verify]).to be_nil
+      end
     end
 
-    context 'in production with non-HTTPS base_uri' do
-      let(:http_credentials) { credentials.merge(base_uri: 'http://example.com') }
+    context 'in production with non-HTTPS base_uri and ssl_verify enabled' do
+      let(:http_credentials) { credentials.merge(base_uri: 'http://example.com', ssl_verify: true) }
 
       before do
         allow(described_class).to receive(:production?).and_return(true)
@@ -55,6 +69,20 @@ RSpec.describe RobustClientSocket::HTTP::Client do
         expect {
           described_class.init(credentials: http_credentials, client_name: client_name)
         }.to raise_error(RobustClientSocket::HTTP::Client::InsecureConnectionError, /HTTPS required in production/)
+      end
+    end
+
+    context 'in production with non-HTTPS base_uri and ssl_verify disabled' do
+      let(:http_credentials) { credentials.merge(base_uri: 'http://example.com', ssl_verify: false) }
+
+      before do
+        allow(described_class).to receive(:production?).and_return(true)
+      end
+
+      it 'allows HTTP when ssl_verify is false' do
+        expect {
+          described_class.init(credentials: http_credentials, client_name: client_name)
+        }.not_to raise_error
       end
     end
 

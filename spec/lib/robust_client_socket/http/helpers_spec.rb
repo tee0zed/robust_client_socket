@@ -19,20 +19,6 @@ RSpec.describe RobustClientSocket::HTTP::Helpers do
     end
   end
 
-  describe 'PublicClassMethods' do
-    describe '.encrypt_message' do
-      it 'returns the encrypted message' do
-        rsa_key = OpenSSL::PKey::RSA.new(2048)
-        allow(dummy_class).to receive(:public_key).and_return(rsa_key.public_key.to_s)
-        allow(dummy_class).to receive(:message_with_timestamp).and_return('message_with_timestamp')
-
-        result = dummy_class.encrypt_message('message')
-        expect(result).to be_a(String)
-        expect { Base64.strict_decode64(result) }.not_to raise_error
-      end
-    end
-  end
-
   describe 'PrivateClassMethods' do
     describe '.robust_headers' do
       it 'returns the correct headers' do

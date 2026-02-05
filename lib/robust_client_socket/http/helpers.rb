@@ -4,18 +4,6 @@ module RobustClientSocket
       def self.included(base)
         base.extend(PrivateClassMethods)
         base.private_class_method(*PrivateClassMethods.instance_methods(false))
-
-        base.extend(PublicClassMethods)
-      end
-    end
-
-    module PublicClassMethods
-      def encrypt_message(message)
-        encrypted_data(message_with_timestamp(message))
-      end
-
-      def message_with_timestamp(message)
-        "#{message}_#{time_now_in_utc}"
       end
     end
 
@@ -36,12 +24,12 @@ module RobustClientSocket
 
       def encrypted_data(data)
         validate_key_security!
-        
+
         encrypted = rsa_key.public_encrypt(
           data,
           OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
         )
-        
+
         ::Base64.strict_encode64(encrypted)
       rescue OpenSSL::PKey::RSAError => e
         raise SecurityError, "Encryption failed: #{e.message}"
@@ -57,7 +45,7 @@ module RobustClientSocket
 
       def validate_key_security!
         key_bits = rsa_key.n.num_bits
-        
+
         if key_bits < MIN_KEY_SIZE
           raise SecurityError,
             "RSA key size (#{key_bits} bits) below minimum (#{MIN_KEY_SIZE} bits)"
