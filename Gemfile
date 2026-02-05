@@ -4,7 +4,7 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in payguard.gemspec
 gemspec
 
-gem "httparty"
+gem 'httparty', '~> 0.18.1'
 
 group :development, :test do
   gem 'webmock'
