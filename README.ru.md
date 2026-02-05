@@ -11,8 +11,8 @@ HTTP-клиент для защищённых межсервисных комм�
 - [Методы HTTP](#методы-http)
 - [Обработка ошибок](#обработка-ошибок)
 - [SSL/TLS настройки](#ssltls-настройки)
+- [Рекомендации по использованию](#рекомендации-по-использованию)
 - [Безопасность в production](#безопасность-в-production)
-- [Бенчмарки](#бенчмарки)
 
 ## 🔒 Функции безопасности
 
@@ -219,9 +219,40 @@ response = RobustClientSocket::Payments.get(
 # Secure-Token заголовок добавляется автоматически!
 ```
 
+### Обработка ответов
+
+```ruby
+response = RobustClientSocket::Payments.get('/api/v1/balance')
+
+# Проверка успешности
+if response.success?
+  # 2xx статус коды
+  data = response.parsed_response
+  puts "Balance: #{data['amount']}"
+end
+
+# Доступ к деталям
+response.code          # HTTP статус код (Integer)
+response.message       # HTTP статус сообщение (String)
+response.body          # Сырое тело ответа (String)
+response.parsed_response  # Распарсенный JSON (Hash)
+response.headers       # Заголовки ответа (Hash)
+
+# Проверка конкретных статусов
+if response.code == 200
+  # OK
+elsif response.code == 404
+  # Not Found
+elsif response.code == 401
+  # Unauthorized - возможно истёк токен
+elsif response.code == 429
+  # Rate limit exceeded
+end
+```
+
 ## 🌐 Методы HTTP
 
-Все стандартные HTTPpartry методы:
+Все стандартные HTTP методы поддерживаются:
 
 ### GET
 ```ruby
@@ -326,6 +357,37 @@ rescue StandardError => e
 end
 ```
 
+### Retry стратегия
+
+```ruby
+def call_with_retry(max_attempts: 3, backoff: 2)
+  attempts = 0
+  
+  begin
+    attempts += 1
+    response = RobustClientSocket::Payments.get('/api/v1/status')
+    
+    return response if response.success?
+    
+    # Retry на 5xx и таймаутах
+    if response.code >= 500 && attempts < max_attempts
+      sleep(backoff ** attempts)
+      retry
+    end
+    
+    response
+    
+  rescue Timeout::Error, SocketError => e
+    if attempts < max_attempts
+      sleep(backoff ** attempts)
+      retry
+    else
+      raise
+    end
+  end
+end
+```
+
 ## 🔐 SSL/TLS настройки
 
 ### Production конфигурация
@@ -350,7 +412,150 @@ RobustClientSocket.configure do |c|
 end
 ```
 
-### 2. Синхронизация с сервером
+### Рекомендуемые cipher suites
+
+**High Security (рекомендуется):**
+```ruby
+ciphers: %w[
+  ECDHE-RSA-AES128-GCM-SHA256
+  ECDHE-RSA-AES256-GCM-SHA384
+  ECDHE-ECDSA-AES128-GCM-SHA256
+  ECDHE-ECDSA-AES256-GCM-SHA384
+]
+```
+
+**Balanced (совместимость + безопасность):**
+```ruby
+ciphers: %w[
+  ECDHE-RSA-AES128-GCM-SHA256
+  ECDHE-RSA-AES256-GCM-SHA384
+  AES128-GCM-SHA256
+  AES256-GCM-SHA384
+]
+```
+
+### Проверка SSL в разных окружениях
+
+```ruby
+c.payments = {
+  base_uri: ENV['PAYMENTS_URL'],
+  public_key: ENV['PAYMENTS_PUBLIC_KEY'],
+  # Включать SSL только в production
+  ssl_verify: Rails.env.production?
+}
+```
+
+## 💡 Рекомендации по использованию
+
+### 1. Управление ключами
+
+**✅ DO:**
+```ruby
+# Храните ключи в переменных окружения
+c.payments = {
+  base_uri: ENV['PAYMENTS_URL'],
+  public_key: ENV['PAYMENTS_PUBLIC_KEY']
+}
+
+# Используйте secrets management
+c.payments = {
+  base_uri: 'https://payments.example.com',
+  public_key: Rails.application.credentials.dig(:payments, :public_key)
+}
+
+# Один файл для всех публичных ключей
+# config/public_keys/payments.pem
+c.payments = {
+  base_uri: ENV['PAYMENTS_URL'],
+  public_key: File.read(Rails.root.join('config/public_keys/payments.pem'))
+}
+```
+
+**❌ DON'T:**
+```ruby
+# НЕ коммитьте ключи в git
+c.payments = {
+  public_key: "-----BEGIN PUBLIC KEY-----\nMII..."
+}
+
+# НЕ используйте один ключ для всех сервисов
+```
+
+### 2. Настройка таймаутов
+
+**Рекомендации по таймаутам:**
+
+```ruby
+# Быстрые операции (чтение)
+c.cache_service = {
+  base_uri: 'https://cache.example.com',
+  public_key: ENV['CACHE_PUBLIC_KEY'],
+  timeout: 3,        # 3 секунды
+  open_timeout: 1    # 1 секунда
+}
+
+# Стандартные операции
+c.api_service = {
+  base_uri: 'https://api.example.com',
+  public_key: ENV['API_PUBLIC_KEY'],
+  timeout: 10,       # 10 секунд (default)
+  open_timeout: 5    # 5 секунд (default)
+}
+
+# Долгие операции (обработка, экспорт)
+c.processor = {
+  base_uri: 'https://processor.example.com',
+  public_key: ENV['PROCESSOR_PUBLIC_KEY'],
+  timeout: 60,       # 60 секунд
+  open_timeout: 10   # 10 секунд
+}
+```
+
+### 3. Логирование и мониторинг
+
+```ruby
+# Wrapper для логирования всех запросов
+module RobustClientSocketLogger
+  def self.call(service_name, method, path, options = {})
+    start_time = Time.now
+    
+    response = RobustClientSocket.const_get(service_name).send(method, path, options)
+    
+    duration = ((Time.now - start_time) * 1000).round(2)
+    
+    Rails.logger.info(
+      "RobustClientSocket Request: " \
+      "service=#{service_name} method=#{method} path=#{path} " \
+      "status=#{response.code} duration=#{duration}ms"
+    )
+    
+    # Метрики
+    Metrics.timing("robust_client.#{service_name}.#{method}", duration)
+    Metrics.increment("robust_client.#{service_name}.status.#{response.code}")
+    
+    response
+  rescue StandardError => e
+    Rails.logger.error(
+      "RobustClientSocket Error: " \
+      "service=#{service_name} method=#{method} path=#{path} " \
+      "error=#{e.class} message=#{e.message}"
+    )
+    
+    Metrics.increment("robust_client.#{service_name}.error.#{e.class.name}")
+    raise
+  end
+end
+
+# Использование
+response = RobustClientSocketLogger.call(
+  'Payments',
+  :post,
+  '/api/v1/charge',
+  body: { amount: 1000 }.to_json
+)
+```
+
+### 4. Синхронизация с сервером
 
 ```ruby
 # Клиент
@@ -370,6 +575,46 @@ RobustServerSocket.configure do |c|
 end
 ```
 
+### 5. Тестирование
+
+```ruby
+# spec/support/robust_client_socket.rb
+RSpec.configure do |config|
+  config.before(:suite) do
+    RobustClientSocket.configure do |c|
+      c.client_name = 'test_service'
+      
+      c.payments = {
+        base_uri: 'http://localhost:3001',
+        public_key: File.read(Rails.root.join('spec/fixtures/keys/payments_public.pem'))
+      }
+    end
+    
+    RobustClientSocket.load!
+  end
+end
+
+# Тест с WebMock
+require 'webmock/rspec'
+
+RSpec.describe 'Payments integration' do
+  before do
+    stub_request(:post, "http://localhost:3001/api/v1/charge")
+      .to_return(status: 200, body: { success: true }.to_json)
+  end
+  
+  it 'creates charge' do
+    response = RobustClientSocket::Payments.post(
+      '/api/v1/charge',
+      body: { amount: 1000 }.to_json
+    )
+    
+    expect(response.success?).to be true
+    expect(response.parsed_response['success']).to be true
+  end
+end
+```
+
 ## 🔐 Безопасность в Production
 
 ### Чеклист безопасности
@@ -385,44 +630,82 @@ end
 - [ ] **Метрики собираются**
 - [ ] **Retry логика реализована для критичных запросов**
 
-## Бенчмарки
+### Мониторинг
 
-![img_1.png](С RobustClientSocket-RobustServerSocket)
-![img.png] (Без RobustClientSocket-RobustServerSocket)
+```ruby
+# Метрики для отслеживания
+# - Количество запросов по сервисам
+# - Время ответа (percentiles: p50, p95, p99)
+# - Количество ошибок по типам
+# - Количество таймаутов
+# - Количество retry попыток
 
+class RobustClientMetrics
+  def self.track(service, method, path)
+    start = Time.now
+    response = yield
+    duration = ((Time.now - start) * 1000).round(2)
+    
+    # StatsD/Prometheus metrics
+    Metrics.timing("robust_client.request.duration", duration, tags: [
+      "service:#{service}",
+      "method:#{method}",
+      "status:#{response.code}"
+    ])
+    
+    Metrics.increment("robust_client.request.count", tags: [
+      "service:#{service}",
+      "method:#{method}",
+      "status:#{response.code}"
+    ])
+    
+    response
+  rescue StandardError => e
+    Metrics.increment("robust_client.error.count", tags: [
+      "service:#{service}",
+      "error:#{e.class.name}"
+    ])
+    raise
+  end
+end
+```
 
 ## 🤝 Интеграция с RobustServerSocket
 
-Полный пример настройки
+### Полный пример настройки
 
-Сервис A (client):
-
+**Сервис A (client):**
+```ruby
 # config/initializers/robust_client_socket.rb
 RobustClientSocket.configure do |c|
-c.client_name = 'service_a'
-
-c.service_b = {
-base_uri: ENV['SERVICE_B_URL'],
-public_key: ENV['SERVICE_B_PUBLIC_KEY'],
-ssl_verify: Rails.env.production?
-}
+  c.client_name = 'service_a'
+  
+  c.service_b = {
+    base_uri: ENV['SERVICE_B_URL'],
+    public_key: ENV['SERVICE_B_PUBLIC_KEY'],
+    ssl_verify: Rails.env.production?
+  }
 end
 
 RobustClientSocket.load!
-Сервис B (server):
+```
 
+**Сервис B (server):**
+```ruby
 # config/initializers/robust_server_socket.rb
 RobustServerSocket.configure do |c|
-c.allowed_services = %w[service_a]  # Разрешить service_a
-c.private_key = ENV['SERVICE_B_PRIVATE_KEY']
-c.token_expiration_time = 3
-c.redis_url = ENV['REDIS_URL']
-c.redis_pass = ENV['REDIS_PASSWORD']
+  c.allowed_services = %w[service_a]  # Разрешить service_a
+  c.private_key = ENV['SERVICE_B_PRIVATE_KEY']
+  c.token_expiration_time = 3
+  c.redis_url = ENV['REDIS_URL']
+  c.redis_pass = ENV['REDIS_PASSWORD']
 end
 
 RobustServerSocket.load!
-Генерация пары ключей:
+```
 
+**Генерация пары ключей:**
+```bash
 # Генерация приватного ключа (для Service B)
 openssl genrsa -out service_b_private.pem 2048
 
@@ -432,9 +715,9 @@ openssl rsa -in service_b_private.pem -pubout -out service_b_public.pem
 # Добавить в переменные окружения
 # Service A: SERVICE_B_PUBLIC_KEY=$(cat service_b_public.pem)
 # Service B: SERVICE_B_PRIVATE_KEY=$(cat service_b_private.pem)
+```
 
 ## 📚 Дополнительные ресурсы
-
 - [BENCHMARK_ANALYSIS.md](BENCHMARK_ANALYSIS.md)
 - [RobustServerSocket documentation](../robust_server_socket/README.ru.md)
 - [HTTParty documentation](https://github.com/jnunemaker/httparty)
