@@ -32,6 +32,7 @@ module RobustClientSocket
           missing = required_keys - credentials.keys
 
           raise InvalidCredentialsError, "Missing keys: #{missing.join(', ')}" if missing.any?
+          raise InvalidCredentialsError, "base_uri cannot be empty" if credentials[:base_uri].to_s.strip.empty?
           raise InvalidCredentialsError, "public_key cannot be empty" if credentials[:public_key].to_s.strip.empty?
         end
 
