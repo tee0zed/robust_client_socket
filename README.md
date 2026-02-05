@@ -11,8 +11,6 @@ HTTP-клиент для защищённых межсервисных комм�
 - [Методы HTTP](#методы-http)
 - [Обработка ошибок](#обработка-ошибок)
 - [SSL/TLS настройки](#ssltls-настройки)
-- [Безопасность в production](#безопасность-в-production)
-- [Бенчмарки](#бенчмарки)
 
 ## 🔒 Функции безопасности
 
@@ -134,7 +132,7 @@ ECDHE-ECDSA-AES256-GCM-SHA384
 
 ### Автоматическая генерация клиентов
 
-После `RobustClientSocket.load!` автоматически создаются классы для каждого сервиса в keychain:
+После `RobustClientSocket.load!` автоматически создаются классы для каждого объявленного сервиса:
 
 ```ruby
 # Конфигурация
@@ -262,7 +260,7 @@ RobustClientSocket::ServiceName.options(path, options = {})
 
 ```ruby
 {
-  body: '{"key": "value"}',           # Тело запроса (String или Hash)
+  body: '{"key": "value"}',           # Тело запроса (Hash)
   query: { param: 'value' },          # Query параметры (Hash)
   headers: { 'X-Custom': 'value' },   # Дополнительные заголовки (Hash)
   timeout: 30,                        # Переопределить таймаут запроса
@@ -370,59 +368,42 @@ RobustServerSocket.configure do |c|
 end
 ```
 
-## 🔐 Безопасность в Production
-
-### Чеклист безопасности
-
-- [ ] **Публичные ключи хранятся в secrets manager**
-- [ ] **Использованы RSA-2048 или выше ключи**
-- [ ] **ssl_verify: true для production**
-- [ ] **HTTPS используется для всех сервисов**
-- [ ] **client_name синхронизирован с allowed_services серверов**
-- [ ] **Настроены разумные таймауты**
-- [ ] **Безопасные cipher suites настроены**
-- [ ] **Логирование всех запросов включено**
-- [ ] **Метрики собираются**
-- [ ] **Retry логика реализована для критичных запросов**
-
-## Бенчмарки
-
-![img_1.png](С RobustClientSocket-RobustServerSocket)
-![img.png] (Без RobustClientSocket-RobustServerSocket)
-
-
 ## 🤝 Интеграция с RobustServerSocket
 
-Полный пример настройки
+### Полный пример настройки
 
-Сервис A (client):
-
+**Сервис A (client):**
+```ruby
 # config/initializers/robust_client_socket.rb
 RobustClientSocket.configure do |c|
-c.client_name = 'service_a'
-
-c.service_b = {
-base_uri: ENV['SERVICE_B_URL'],
-public_key: ENV['SERVICE_B_PUBLIC_KEY'],
-ssl_verify: Rails.env.production?
-}
+  c.client_name = 'service_a'
+  
+  c.service_b = {
+    base_uri: ENV['SERVICE_B_URL'],
+    public_key: ENV['SERVICE_B_PUBLIC_KEY'],
+    ssl_verify: Rails.env.production?
+  }
 end
 
 RobustClientSocket.load!
-Сервис B (server):
+```
 
+**Сервис B (server):**
+```ruby
 # config/initializers/robust_server_socket.rb
 RobustServerSocket.configure do |c|
-c.allowed_services = %w[service_a]  # Разрешить service_a
-c.private_key = ENV['SERVICE_B_PRIVATE_KEY']
-c.token_expiration_time = 3
-c.redis_url = ENV['REDIS_URL']
-c.redis_pass = ENV['REDIS_PASSWORD']
+  c.allowed_services = %w[service_a]  # Разрешить service_a
+  c.private_key = ENV['SERVICE_B_PRIVATE_KEY']
+  c.token_expiration_time = 3
+  c.redis_url = ENV['REDIS_URL']
+  c.redis_pass = ENV['REDIS_PASSWORD']
 end
 
 RobustServerSocket.load!
-Генерация пары ключей:
+```
 
+**Генерация пары ключей:**
+```bash
 # Генерация приватного ключа (для Service B)
 openssl genrsa -out service_b_private.pem 2048
 
@@ -432,10 +413,11 @@ openssl rsa -in service_b_private.pem -pubout -out service_b_public.pem
 # Добавить в переменные окружения
 # Service A: SERVICE_B_PUBLIC_KEY=$(cat service_b_public.pem)
 # Service B: SERVICE_B_PRIVATE_KEY=$(cat service_b_private.pem)
+```
 
 ## 📚 Дополнительные ресурсы
 
-- [BENCHMARK_ANALYSIS.md](BENCHMARK_ANALYSIS.md)
+- [BENCHMARK_ANALYSIS.md](../BENCHMARK_ANALYSIS.md)
 - [RobustServerSocket documentation](../robust_server_socket/README.ru.md)
 - [HTTParty documentation](https://github.com/jnunemaker/httparty)
 - [OpenSSL Ruby documentation](https://ruby-doc.org/stdlib/libdoc/openssl/rdoc/OpenSSL.html)
