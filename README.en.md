@@ -1,5 +1,7 @@
 # RobustClientSocket
 
+⚠️ Not Production Tested (yet)
+
 HTTP client for secure inter-service communications with automatic authorization token generation.
 
 ## 📋 Table of Contents
