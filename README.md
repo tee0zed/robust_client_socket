@@ -262,7 +262,7 @@ RobustClientSocket::ServiceName.options(path, options = {})
 
 ```ruby
 {
-  body: '{"key": "value"}',           # Тело запроса (Hash)
+  body: { "key": "value" },           # Тело запроса (Hash)
   query: { param: 'value' },          # Query параметры (Hash)
   headers: { 'X-Custom': 'value' },   # Дополнительные заголовки (Hash)
   timeout: 30,                        # Переопределить таймаут запроса
