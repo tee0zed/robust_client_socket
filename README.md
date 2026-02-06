@@ -419,7 +419,6 @@ openssl rsa -in service_b_private.pem -pubout -out service_b_public.pem
 
 ## 📚 Дополнительные ресурсы
 
-- [BENCHMARK_ANALYSIS.md](../BENCHMARK_ANALYSIS.md)
 - [RobustServerSocket documentation](../robust_server_socket/README.ru.md)
 - [HTTParty documentation](https://github.com/jnunemaker/httparty)
 - [OpenSSL Ruby documentation](https://ruby-doc.org/stdlib/libdoc/openssl/rdoc/OpenSSL.html)
