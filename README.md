@@ -2,6 +2,8 @@
 
 ⚠️ Not Production Tested (yet)
 
+`Not vibecoded`
+
 HTTP-клиент для защищённых межсервисных коммуникаций с автоматической генерацией токенов авторизации.
 
 ## ПОЧЕМУ (WHY)
@@ -486,4 +488,5 @@ openssl rsa -in service_b_private.pem -pubout -out service_b_public.pem
 
 ## 🐛 Баги и предложения
 
-Сообщайте о проблемах через issue tracker вашего репозитория.
+Сообщайте о багах через ишью, или напрямую тг @cruel_mango или email tee0zed@gmail.com
+

@@ -2,6 +2,8 @@
 
 ⚠️ Not Production Tested (yet)
 
+`Not vibecoded`
+
 HTTP client for secure inter-service communications with automatic authorization token generation.
 
 ## WHY
@@ -486,4 +488,4 @@ See [LICENSE.txt](LICENSE.txt) file
 
 ## 🐛 Bugs and Suggestions
 
-Report issues through your repository's issue tracker.
+Report issues to my telegram @cruel_mango or to email tee0zed@gmail.com
