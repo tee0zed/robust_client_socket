@@ -4,6 +4,62 @@
 
 HTTP client for secure inter-service communications with automatic authorization token generation.
 
+## WHY
+
+### The Problem
+
+When building microservice communication, the following challenges arise:
+
+- **Lack of authentication**: HTTP requests between services are unprotected
+- **Replay attacks**: Intercepted requests can be reused maliciously
+- **Manual key management**: Complexity of handling RSA keys for each service
+- **Boilerplate code**: Repetitive code for encryption and request sending
+
+### The Solution
+
+RobustClientSocket provides:
+
+- **Automatic tokenization**: Each request receives a unique encrypted token
+- **RSA encryption**: Asymmetric encryption with key validation
+- **Keychain management**: Auto-generation of HTTP clients for each service
+- **Replay attack protection**: Timestamp in every token
+
+## HOW IT WORKS
+
+### Architecture
+
+```
+┌───────────────────┐     ┌───────────────────┐
+│  Your Service     │     │ Target Service    │
+│                   │     │ (RobustServer)    │
+└─────────┬─────────┘     └─────────┬─────────┘
+          │                           │
+          v                           v
+┌───────────────────┐     ┌───────────────────┐
+│ RobustClientSocket│     │ RobustServerSocket│
+│                   │     │                   │
+│ 1. Generate token │────>│ 1. Decrypt token  │
+│ 2. RSA encrypt    │     │ 2. Validate       │
+│ 3. Send request   │     │ 3. Check limits   │
+└───────────────────┘     └───────────────────┘
+```
+
+### Request Flow
+
+1. **Token formation**: `{client_name}_{timestamp}`
+2. **RSA encryption**: Token is encrypted with target service's public key
+3. **Base64 encoding**: For HTTP header transmission
+4. **Request sending**: Request with `Secure-Token` header
+5. **Validation**: Server decrypts and validates the token
+
+### Token Structure
+
+```
+Base64(RSA_Encrypt("{service_name}_{unix_timestamp}"))
+
+Example: Base64(RSA_Encrypt("core_1704067200"))
+```
+
 ## 📋 Table of Contents
 
 - [Security Features](#security-features)
