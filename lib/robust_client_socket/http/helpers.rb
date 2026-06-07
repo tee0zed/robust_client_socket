@@ -61,7 +61,7 @@ module RobustClientSocket
       end
 
       def time_now_in_utc
-        Time.now.utc.to_i
+        Process.clock_gettime(Process::CLOCK_REALTIME, :millisecond)
       end
     end
   end
