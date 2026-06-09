@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
         f.start_with?(*%w[features/ .git .circleci Gemfile])
     end
   end
-  spec.require_paths = %w[lib config]
+  spec.require_paths = %w[lib]
   spec.add_dependency 'oj'
   spec.add_dependency 'httparty'
   spec.add_dependency 'rspec'

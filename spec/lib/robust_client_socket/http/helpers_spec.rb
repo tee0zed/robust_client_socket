@@ -60,9 +60,9 @@ RSpec.describe RobustClientSocket::HTTP::Helpers do
     end
 
     describe '.time_now_in_utc' do
-      it 'returns current UTC timestamp' do
-        allow(Time).to receive_message_chain(:now, :utc, :to_i).and_return(1234567890)
-        expect(dummy_class.send(:time_now_in_utc)).to eq(1234567890)
+      it 'returns current UTC timestamp in milliseconds' do
+        allow(Process).to receive(:clock_gettime).with(Process::CLOCK_REALTIME, :millisecond).and_return(1234567890123)
+        expect(dummy_class.send(:time_now_in_utc)).to eq(1234567890123)
       end
     end
 
